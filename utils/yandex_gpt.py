@@ -1,10 +1,11 @@
-import os, requests
+import os, requests, wave
 from typing import TypedDict, Any
 
 YAGPT_FOLDER_ID = os.environ.get("YAGPT_FOLDER_ID")
 YAGPT_IAM_TOKEN = os.environ.get("YAGPT_IAM_TOKEN")
 
 YAGPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+YASPEECHKIT_URL = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
 
 async def make_gpt_request(premessage: str, message: str) -> str:
     data: dict[str, Any] = {}
@@ -27,3 +28,34 @@ async def make_gpt_request(premessage: str, message: str) -> str:
 
     return response["result"]["alternatives"][0]["message"]["text"]
 
+async def synthesize(text: str):
+    data = {
+        "text": text,
+        "lang": 'en-US',
+        "voice": "john",
+        "folderId": YAGPT_FOLDER_ID,
+        "format": "lpcm",
+        "sampleRateHertz": 48000,
+    }
+
+    with requests.post(
+        YASPEECHKIT_URL,
+        headers={
+            "Authorization": f"Bearer {YAGPT_IAM_TOKEN}"
+        },
+        data=data
+    ) as resp:
+        if resp.status_code != 200:
+            raise RuntimeError("Invalid response received: code: %d, message: %s" % (resp.status_code, resp.text))
+
+        with open("output.raw", "wb") as file:
+            for chunk in resp.iter_content(chunk_size=None):
+                file.write(chunk)
+        
+    with open("output.raw", "rb") as file:
+        file_data = file.read()
+        with wave.open("output.wav", "wb") as output_file:
+            output_file.setnchannels(1)
+            output_file.setsampwidth(2)
+            output_file.setframerate(48000)
+            output_file.writeframesraw(file_data)
