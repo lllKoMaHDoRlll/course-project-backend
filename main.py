@@ -7,6 +7,8 @@ from typing import TypedDict, List
 
 from utils.yandex_gpt import make_gpt_request, synthesize
 
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
+
 class ExerciseSentencesAnswer(BaseModel):
     id: int
     answer: str
@@ -45,6 +47,8 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:4200",
+    "https://four-aliens-mate.loca.lt",
+    "https://four-aliens-mate.loca.lt:4200"
 ]
 
 app.add_middleware(
@@ -184,4 +188,20 @@ async def get_exercise_chain_data(word: str | None = None):
             return {"result": new_word}
         else:
             return None
+
+@app.get("/api/telegram/profile_photo")
+async def get_telegram_user_profile_photo(user_id: int):
+    print(1)
+    response = requests.get(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/getUserProfilePhotos?user_id={user_id}").json()
+    print(response)
+    profile_photo_id = response["result"]["photos"][-1][-1]["file_id"]
+    response = requests.get(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/getFile?file_id={profile_photo_id}").json()
+    print(response)
+    profile_photo_path = response["result"]["file_path"]
+    response = requests.get(f"https://api.telegram.org/file/bot{TG_BOT_TOKEN}/{profile_photo_path}")
+    with open("profile_photo.jpg", "wb") as file:
+        file.write(response.content)
+    print("photo obtained")
+    return FileResponse("profile_photo.jpg", media_type="image/jpg")
+
 
