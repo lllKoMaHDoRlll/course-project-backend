@@ -4,8 +4,11 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import os, requests, random, re
 from typing import TypedDict, List
+from dotenv import load_dotenv
 
 from utils.yandex_gpt import make_gpt_request, synthesize
+
+load_dotenv()
 
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
 
@@ -65,7 +68,7 @@ db_sentences_mok: List[ExerciseSentencesDBData] = []
 db_words_mok: List[ExerciseWordsDBData] = []
 db_listening_mok: List[ExerciseListeningDBData] = []
 
-@app.get("/api/exercises/sentence")
+@app.get("/exercises/sentence")
 async def get_exercise_sentences_data():
     response = await make_gpt_request(
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
@@ -95,13 +98,13 @@ async def get_exercise_sentences_data():
     print(data)
     return data
 
-@app.post("/api/exercises/sentence")
+@app.post("/exercises/sentence")
 async def check_exercise_sentences_data(exercise_sentences_answer: ExerciseSentencesAnswer):
     exercise_data = db_sentences_mok[exercise_sentences_answer.id]
     result = exercise_data["sentence"] == exercise_sentences_answer.answer
     return {"result": result}
 
-@app.get("/api/exercises/words")
+@app.get("/exercises/words")
 async def get_exercise_words_data():
     response = await make_gpt_request(
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
@@ -132,7 +135,7 @@ async def get_exercise_words_data():
 
     return exercise_data
 
-@app.post("/api/exercises/words")
+@app.post("/exercises/words")
 async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer):
     words_data = db_words_mok[exercise_words_data.id]["words"]
     result = True
@@ -143,7 +146,7 @@ async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer):
     
     return {"result": result}
 
-@app.get("/api/exercises/listening")
+@app.get("/exercises/listening")
 async def get_exercise_listening_data():
     response = await make_gpt_request(
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
@@ -163,7 +166,7 @@ async def get_exercise_listening_data():
     await synthesize(". ".join(words))
     return FileResponse(path="output.wav", filename=f"output_{len(db_listening_mok) - 1}.wav", media_type="audio/wav")
 
-@app.get("/api/exercises/chain")
+@app.get("/exercises/chain")
 async def get_exercise_chain_data(word: str | None = None):
     if word is None:
         response = await make_gpt_request(
@@ -190,7 +193,7 @@ async def get_exercise_chain_data(word: str | None = None):
         else:
             return None
 
-@app.get("/api/telegram/profile_photo")
+@app.get("/telegram/profile_photo")
 async def get_telegram_user_profile_photo(user_id: int):
     print(1)
     response = requests.get(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/getUserProfilePhotos?user_id={user_id}").json()
