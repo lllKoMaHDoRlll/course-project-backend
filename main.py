@@ -48,7 +48,8 @@ origins = [
     "http://localhost",
     "http://localhost:4200",
     "https://four-aliens-mate.loca.lt",
-    "https://four-aliens-mate.loca.lt:4200"
+    "https://four-aliens-mate.loca.lt:4200",
+    "https://tonolingo.ru"
 ]
 
 app.add_middleware(
