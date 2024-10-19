@@ -8,32 +8,16 @@ from dotenv import load_dotenv
 
 from utils.yandex_gpt import make_gpt_request, synthesize
 
+from models.exercises import ExerciseSentencesAnswer, ExerciseSentencesData, ExerciseWordsAnswer, ExerciseWordsData
+
 load_dotenv()
 
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
-
-class ExerciseSentencesAnswer(BaseModel):
-    id: int
-    answer: str
 
 class ExerciseSentencesDBData(TypedDict):
     id: int
     sentence: str
     translation: str
-
-class ExerciseSentencesData(TypedDict):
-    id: int
-    sentence: list[str]
-    translation: str
-
-class ExerciseWordsAnswer(BaseModel):
-    id: int
-    words: list[str]
-
-class ExerciseWordsData(TypedDict):
-    id: int
-    words: list[str]
-    translations: list[str]
 
 class ExerciseWordsDBData(TypedDict):
     id: int
