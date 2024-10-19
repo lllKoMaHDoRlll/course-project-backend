@@ -151,6 +151,11 @@ async def get_exercise_listening_data():
     await synthesize(". ".join(words))
     return FileResponse(path="output.wav", filename=f"output_{len(db_listening_mok) - 1}.wav", media_type="audio/wav")
 
+@app.get("/exercises/listening/{id}")
+async def get_exercise_listening_data_by_id(id: int):
+    result = database.get_listening_exercise_by_id(id)
+    return {"result": result}
+
 @app.get("/exercises/chain")
 async def get_exercise_chain_data(word: str | None = None):
     if word is None:
