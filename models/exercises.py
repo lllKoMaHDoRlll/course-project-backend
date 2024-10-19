@@ -18,3 +18,7 @@ class ExerciseWordsData(TypedDict):
     id: int
     words: list[str]
     translations: list[str]
+
+class ExerciseListeningDBData(TypedDict):
+    id: int
+    words: list[str]
