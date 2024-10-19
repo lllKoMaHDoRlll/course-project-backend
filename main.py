@@ -7,6 +7,7 @@ from typing import TypedDict, List
 from dotenv import load_dotenv
 
 from utils.yandex_gpt import make_gpt_request, synthesize
+from utils.database import database
 
 from models.exercises import ExerciseSentencesAnswer, ExerciseSentencesData, ExerciseWordsAnswer, ExerciseWordsData
 
@@ -192,4 +193,7 @@ async def get_telegram_user_profile_photo(user_id: int):
     print("photo obtained")
     return FileResponse("profile_photo.jpg", media_type="image/jpg")
 
-
+@app.get("/achievements/types")
+async def get_achievements_types():
+    result = database.get_achievements_types()
+    return {"result": result}
