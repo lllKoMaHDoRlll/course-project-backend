@@ -59,7 +59,8 @@ async def get_exercise_sentences_data():
     )
     exercise_id = database.write_sentence_exercise(exercise)
 
-    words = exercise["sentence"]
+    words = exercise["sentence"].split()
+    print(words)
     random.shuffle(words)
 
     data = ExerciseSentencesData(

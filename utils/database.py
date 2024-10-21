@@ -48,7 +48,8 @@ class Database:
     
     def write_listening_exercise(self, exercise: ExerciseListeningDBData) -> int:
         words = " ".join(exercise["words"])
-        self._cursor.execute(f"INSERT INTO listening_exercises (words) VALUES ({words});")
+        self._cursor.execute(f'INSERT INTO listening_exercises (words) VALUES ("{words}");')
+        self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
 
@@ -71,7 +72,8 @@ class Database:
     def write_words_exercise(self, exercise: ExerciseWordsDBData) -> int:
         words = " ".join(exercise["words"])
         translations = " ".join(exercise["translations"])
-        self._cursor.execute(f"INSERT INTO words_exercises (words, translations) VALUES ({words}, {translations});")
+        self._cursor.execute(f'INSERT INTO words_exercises (words, translations) VALUES ("{words}", "{translations}");')
+        self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
 
@@ -94,7 +96,8 @@ class Database:
     def write_sentence_exercise(self, exercise: ExerciseSentenceDBData) -> int:
         sentence = exercise["sentence"]
         translation = exercise["translation"]
-        self._cursor.execute(f"INSERT INTO sentence_exercises (sentence, translation) VALUES ({sentence, translation})")
+        self._cursor.execute(f'INSERT INTO sentence_exercises (sentence, translation) VALUES ("{sentence}", "{translation}");')
+        self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
     
@@ -118,7 +121,8 @@ class Database:
         description = exercise["description"]
         tasks = "@".join(map(lambda task: "%".join(task), exercise["tasks"]))
         answers = "@".join(exercise["answers"])
-        self._cursor.execute(f"INSERT INTO gramar_exercises (description, tasks, answers) VALUES ({description, tasks, answers})")
+        self._cursor.execute(f'INSERT INTO gramar_exercises (description, tasks, answers) VALUES ("{description}", "{tasks}", "{answers}");')
+        self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
 
