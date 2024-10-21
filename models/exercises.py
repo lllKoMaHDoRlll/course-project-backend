@@ -23,6 +23,10 @@ class ExerciseListeningDBData(TypedDict):
     id: int
     words: list[str]
 
+class ExerciseListeningAnswer(BaseModel):
+    id: int
+    words: list[str]
+
 class ExerciseWordsDBData(TypedDict):
     id: int
     words: list[str]

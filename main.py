@@ -14,6 +14,7 @@ from models.exercises import (
     ExerciseSentencesData, 
     ExerciseWordsAnswer, 
     ExerciseWordsData,
+    ExerciseListeningAnswer,
     ExerciseSentenceDBData,
     ExerciseWordsDBData,
     ExerciseGramarDBData,
@@ -135,10 +136,15 @@ async def get_exercise_listening_data():
     await synthesize(". ".join(exercise["words"]))
     return FileResponse(path="output.wav", filename=f"output_{exercise_id}.wav", media_type="audio/wav")
 
-@app.get("/exercises/listening/{id}")
-async def get_exercise_listening_data_by_id(id: int):
-    return None
-    result = database.get_listening_exercise_by_id(id)
+@app.post("/exercises/listening")
+async def check_exercise_listening(exercise_listening_data: ExerciseListeningAnswer):
+    exercise_data = database.get_listening_exercise_by_id(exercise_listening_data.id)
+    if not exercise_data: return {"result": False}
+    result = True
+    for i in range(len(exercise_data["words"])):
+        if exercise_data["words"][i] != exercise_listening_data.words[i]:
+            result = False
+            break
     return {"result": result}
 
 @app.get("/exercises/chain")
