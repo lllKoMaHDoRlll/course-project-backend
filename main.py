@@ -9,26 +9,20 @@ from dotenv import load_dotenv
 from utils.yandex_gpt import make_gpt_request, synthesize
 from utils.database import database
 
-from models.exercises import ExerciseSentencesAnswer, ExerciseSentencesData, ExerciseWordsAnswer, ExerciseWordsData
+from models.exercises import (
+    ExerciseSentencesAnswer, 
+    ExerciseSentencesData, 
+    ExerciseWordsAnswer, 
+    ExerciseWordsData,
+    ExerciseSentenceDBData,
+    ExerciseWordsDBData,
+    ExerciseGramarDBData,
+    ExerciseListeningDBData
+)
 
 load_dotenv()
 
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
-
-class ExerciseSentencesDBData(TypedDict):
-    id: int
-    sentence: str
-    translation: str
-
-class ExerciseWordsDBData(TypedDict):
-    id: int
-    words: list[str]
-    translations: list[str]
-
-class ExerciseListeningDBData(TypedDict):
-    id: int
-    words: str
-
 
 app = FastAPI()
 
@@ -49,10 +43,6 @@ app.add_middleware(
     expose_headers=["*"]
 )
 
-db_sentences_mok: List[ExerciseSentencesDBData] = []
-db_words_mok: List[ExerciseWordsDBData] = []
-db_listening_mok: List[ExerciseListeningDBData] = []
-
 @app.get("/exercises/sentence")
 async def get_exercise_sentences_data():
     response = await make_gpt_request(
@@ -62,30 +52,27 @@ async def get_exercise_sentences_data():
 
     print(response)
 
-    # сохранение ответа в бд
-    db_data = ExerciseSentencesDBData(
-        id=len(db_sentences_mok),
+    exercise = ExerciseSentenceDBData(
+        id=0,
         sentence=response.split("—")[1].strip(),
         translation=response.split("—")[0].strip()
     )
-    db_sentences_mok.append(db_data)
-    print(db_sentences_mok)
+    exercise_id = database.write_sentence_exercise(exercise)
 
-    # Составление задания
-    words = response.split("—")[1].strip().split(" ")
+    words = exercise["sentence"]
     random.shuffle(words)
 
     data = ExerciseSentencesData(
-        id=len(db_sentences_mok) - 1,
-        translation=response.split("—")[0].strip(),
+        id=exercise_id,
+        translation=exercise["translation"],
         sentence=words
     )
-    print(data)
     return data
 
 @app.post("/exercises/sentence")
 async def check_exercise_sentences_data(exercise_sentences_answer: ExerciseSentencesAnswer):
-    exercise_data = db_sentences_mok[exercise_sentences_answer.id]
+    exercise_data = database.get_sentence_exercise_by_id(exercise_sentences_answer.id)
+    if not exercise_data: return {"result": False}
     result = exercise_data["sentence"] == exercise_sentences_answer.answer
     return {"result": result}
 
@@ -95,37 +82,36 @@ async def get_exercise_words_data():
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
         "Придумай 10 слов на русском и напиши перевод к ним"
     )
-    print(response)
     data = re.findall(r"\d+.[\s\*]*([а-яА-Я]+)[\s\*]*— ([a-zA-Z]+)", response)
-    print(data)
 
     translations = [pair[0] for pair in data]
     words = [pair[1] for pair in data]
 
-    db_data = ExerciseWordsDBData(
-        id=len(db_words_mok),
+    exercise = ExerciseWordsDBData(
+        id=0,
         words=words.copy(),
         translations=translations
     )
-    db_words_mok.append(db_data)
-    print(db_words_mok)
+    exercise_id = database.write_words_exercise(exercise)
 
     random.shuffle(words)
 
     exercise_data = ExerciseWordsData(
-        id=len(db_words_mok) - 1,
+        id=exercise_id,
         words=words,
-        translations=translations
+        translations=exercise["translations"]
     )
 
     return exercise_data
 
 @app.post("/exercises/words")
 async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer):
-    words_data = db_words_mok[exercise_words_data.id]["words"]
+    exercise_data = database.get_words_exercise_by_id(exercise_words_data.id)
+    if not exercise_data: return {"result": False}
+
     result = True
     for i in range(len(exercise_words_data.words)):
-        if exercise_words_data.words[i] != words_data[i]:
+        if exercise_words_data.words[i] != exercise_data["words"][i]:
             result = False
             break
     
@@ -137,22 +123,20 @@ async def get_exercise_listening_data():
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
         "Придумай 3 слова на русском и напиши перевод к ним"
     )
-    print(response)
-    print(re.findall(r"(\d+.\s+)?(?(1)([а-яА-Я]+\s+—\s+)?(?(2)([a-zA-Z]+)|([a-zA-Z]+))|(«)?(?(4)([a-zA-Z]+)»|([a-zA-Z]+)[.,]))", response))
     words = [[group for group in match if re.match("[a-zA-Z]+", group)][0] for match in re.findall(r"(\d+.\s+)?(?(1)([а-яА-Я]+\s+—\s+)?(?(2)([a-zA-Z]+)|([a-zA-Z]+))|(«)?(?(4)([a-zA-Z]+)»|([a-zA-Z]+)[.,]))", response)]
-    print(words)
 
-    db_data = ExerciseListeningDBData(
-        id=len(db_listening_mok),
+    exercise = ExerciseListeningDBData(
+        id=0,
         words=words
     )
-    db_listening_mok.append(db_data)
+    exercise_id = database.write_listening_exercise(exercise)
     
-    await synthesize(". ".join(words))
-    return FileResponse(path="output.wav", filename=f"output_{len(db_listening_mok) - 1}.wav", media_type="audio/wav")
+    await synthesize(". ".join(exercise["words"]))
+    return FileResponse(path="output.wav", filename=f"output_{exercise_id}.wav", media_type="audio/wav")
 
 @app.get("/exercises/listening/{id}")
 async def get_exercise_listening_data_by_id(id: int):
+    return None
     result = database.get_listening_exercise_by_id(id)
     return {"result": result}
 
