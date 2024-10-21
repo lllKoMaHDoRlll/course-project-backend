@@ -19,6 +19,11 @@ class ExerciseWordsData(TypedDict):
     words: list[str]
     translations: list[str]
 
+class ExerciseGramarData(TypedDict):
+    id: int
+    description: str
+    tasks: list[tuple[str, str]]
+
 class ExerciseListeningDBData(TypedDict):
     id: int
     words: list[str]

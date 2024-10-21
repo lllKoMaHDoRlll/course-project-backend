@@ -18,7 +18,8 @@ from models.exercises import (
     ExerciseSentenceDBData,
     ExerciseWordsDBData,
     ExerciseGramarDBData,
-    ExerciseListeningDBData
+    ExerciseListeningDBData,
+    ExerciseGramarData
 )
 
 load_dotenv()
@@ -146,6 +147,18 @@ async def check_exercise_listening(exercise_listening_data: ExerciseListeningAns
             result = False
             break
     return {"result": result}
+
+@app.get("/exercises/gramar")
+async def get_exercise_gramar_data():
+    exercise = database.get_random_gramar_exercise()
+    #TODO: в БД увеличить размер аттрибута tasks
+    exercise_data = ExerciseGramarData(
+        id=exercise["id"],
+        description=exercise["description"],
+        tasks=exercise["tasks"]
+    )
+
+    return exercise_data
 
 @app.get("/exercises/chain")
 async def get_exercise_chain_data(word: str | None = None):

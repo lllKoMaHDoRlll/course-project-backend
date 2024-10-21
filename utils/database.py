@@ -6,7 +6,7 @@ from models.exercises import (
     ExerciseSentenceDBData,
     ExerciseGramarDBData
 )
-import os
+import os, random
 
 DB_USER = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
@@ -100,6 +100,16 @@ class Database:
         self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
+    
+    def get_random_gramar_exercise(self) -> ExerciseGramarDBData | None:
+        self._cursor.execute("SELECT id from gramar_exercises;")
+        ids = list(map(lambda t: t[0], self._cursor.fetchall()))
+        random_id = random.choice(ids)
+        self._cursor.execute(f"SELECT * from gramar_exercises WHERE id = {random_id};")
+        result = self._cursor.fetchone()
+        if result:
+           return {"id": result[0], "description": result[1], "tasks": list(map(lambda task: task.split("%") , result[2].split("@"))), "answers": result[3].split("@")}
+        return None
     
     def get_gramar_exercise_by_id(self, id: int) -> ExerciseGramarDBData | None:
         if not isinstance(id, int): return None
