@@ -24,6 +24,10 @@ class ExerciseGramarData(TypedDict):
     description: str
     tasks: list[tuple[str, str]]
 
+class ExerciseGramarAnswer(BaseModel):
+    id: int
+    answers: list[str]
+
 class ExerciseListeningDBData(TypedDict):
     id: int
     words: list[str]

@@ -19,7 +19,8 @@ from models.exercises import (
     ExerciseWordsDBData,
     ExerciseGramarDBData,
     ExerciseListeningDBData,
-    ExerciseGramarData
+    ExerciseGramarData,
+    ExerciseGramarAnswer
 )
 
 load_dotenv()
@@ -159,6 +160,20 @@ async def get_exercise_gramar_data():
     )
 
     return exercise_data
+
+@app.post("exercises/gramar")
+async def check_exercise_gramar(answer: ExerciseGramarAnswer):
+    exercise = database.get_gramar_exercise_by_id(answer.id)
+    if not exercise: return None
+
+    result = True
+    for i in range(len(exercise["answers"])):
+        if exercise["answers"][i] != answer.answers[i]:
+            result = False
+            break
+    
+    return {"result": result}
+
 
 @app.get("/exercises/chain")
 async def get_exercise_chain_data(word: str | None = None):
