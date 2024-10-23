@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import TypedDict
+from enum import Enum
 
 class ExerciseSentencesAnswer(BaseModel):
     id: int
@@ -51,3 +52,10 @@ class ExerciseGramarDBData(TypedDict):
     description: str
     tasks: list[tuple[str, str]]
     answers: list[str]
+
+class EXERCISES_TYPES(Enum):
+    SENTENCE = 1
+    WORDS = 2
+    LISTENING = 3
+    GRAMAR = 4
+    CHAIN = 5
