@@ -4,9 +4,13 @@ from models.exercises import (
     ExerciseListeningDBData, 
     ExerciseWordsDBData, 
     ExerciseSentenceDBData,
-    ExerciseGramarDBData
+    ExerciseGramarDBData,
+    EXERCISES_TYPES
 )
+from models.users import TotalStats, User
+
 import os, random
+from datetime import datetime
 
 DB_USER = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
@@ -135,6 +139,40 @@ class Database:
         self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
+    
+    def complete_exercise(self, user_id: int, exercise_id: int, exercise_type_id: EXERCISES_TYPES):
+        self._cursor.execute(f'INSERT INTO completed_exercises (tg_user_id, exercise_id, exercise_type_id) VALUES ({user_id}, {exercise_id}, {exercise_type_id});')
+        self._connection.commit()
+    
+    def get_user_total_stats(self, user_id: int) -> TotalStats | None:
+        if not isinstance(user_id, int): return None
+        self._cursor.execute(f"SELECT * from total_stats WHERE tg_user_id = {user_id};")
+        result = self._cursor.fetchone()
+        print(result)
+        if result: 
+            return TotalStats(
+                user_id=result[0],
+                last_entrance_date=result[1],
+                entrance_streak=result[2]
+            )
+        return None
+            
+    
+    def update_user_total_stats(self, total_stats: TotalStats):
+        self._cursor.execute(f'UPDATE total_stas SET last_entrance_date={total_stats["last_entrance_date"]}, entrance_strak={total_stats["entrance_streak"]} WHERE tg_user_id={total_stats["user_id"]}')
+        self._connection.commit()
+    
+    def write_or_update_user(self, user: User):
+        self._cursor.execute(f'SELECT (tg_user_id, wallet) from users WHERE tg_user_id={user["id"]};')
+        if self._cursor.rowcount == 1:
+            self._cursor.execute(f'UPDATE users SET wallet="{user["wallet"]}" WHERE tg_user_id={user["id"]};')
+        else:
+            self._cursor.execute(f"INSERT INTO users (tg_user_id) VALUES ({user['id']});")
+
+            today = datetime.today().strftime("%Y-%m-%d")
+
+            self._cursor.execute(f"INSERT INTO total_stats (tg_user_id, last_entrance_date, entrance_streak, completed_tasks) VALUES ({user['id']}, {today}, 1, 0);")
+        self._connection.commit()
 
 
     

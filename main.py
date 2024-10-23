@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import os, requests, random, re
+from datetime import datetime, timedelta
 from typing import TypedDict, List
 from dotenv import load_dotenv
 
@@ -10,6 +11,7 @@ from utils.yandex_gpt import make_gpt_request, synthesize
 from utils.database import database
 
 from models.exercises import (
+    EXERCISES_TYPES,
     ExerciseSentencesAnswer, 
     ExerciseSentencesData, 
     ExerciseWordsAnswer, 
@@ -22,6 +24,8 @@ from models.exercises import (
     ExerciseGramarData,
     ExerciseGramarAnswer
 )
+
+from models.users import UserData, User
 
 load_dotenv()
 
@@ -74,10 +78,12 @@ async def get_exercise_sentences_data():
     return data
 
 @app.post("/exercises/sentence")
-async def check_exercise_sentences_data(exercise_sentences_answer: ExerciseSentencesAnswer):
+async def check_exercise_sentences_data(exercise_sentences_answer: ExerciseSentencesAnswer, user_id: int):
     exercise_data = database.get_sentence_exercise_by_id(exercise_sentences_answer.id)
     if not exercise_data: return {"result": False}
     result = exercise_data["sentence"] == exercise_sentences_answer.answer
+    if result:
+        database.complete_exercise(user_id, exercise_sentences_answer.id, EXERCISES_TYPES.SENTENCE)
     return {"result": result}
 
 @app.get("/exercises/words")
@@ -109,7 +115,7 @@ async def get_exercise_words_data():
     return exercise_data
 
 @app.post("/exercises/words")
-async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer):
+async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer, user_id: int):
     exercise_data = database.get_words_exercise_by_id(exercise_words_data.id)
     if not exercise_data: return {"result": False}
 
@@ -118,6 +124,9 @@ async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer):
         if exercise_words_data.words[i] != exercise_data["words"][i]:
             result = False
             break
+    
+    if result:
+        database.complete_exercise(user_id, exercise_words_data.id, EXERCISES_TYPES.WORDS)
     
     return {"result": result}
 
@@ -139,7 +148,7 @@ async def get_exercise_listening_data():
     return FileResponse(path="output.wav", filename=f"output_{exercise_id}.wav", media_type="audio/wav")
 
 @app.post("/exercises/listening")
-async def check_exercise_listening(exercise_listening_data: ExerciseListeningAnswer):
+async def check_exercise_listening(exercise_listening_data: ExerciseListeningAnswer, user_id: int):
     exercise_data = database.get_listening_exercise_by_id(exercise_listening_data.id)
     if not exercise_data: return {"result": False}
     result = True
@@ -147,6 +156,10 @@ async def check_exercise_listening(exercise_listening_data: ExerciseListeningAns
         if exercise_data["words"][i] != exercise_listening_data.words[i]:
             result = False
             break
+    
+    if result:
+        database.complete_exercise(user_id, exercise_listening_data.id, EXERCISES_TYPES.WORDS)
+    
     return {"result": result}
 
 @app.get("/exercises/gramar")
@@ -162,7 +175,7 @@ async def get_exercise_gramar_data():
     return exercise_data
 
 @app.post("exercises/gramar")
-async def check_exercise_gramar(answer: ExerciseGramarAnswer):
+async def check_exercise_gramar(answer: ExerciseGramarAnswer, user_id: int):
     exercise = database.get_gramar_exercise_by_id(answer.id)
     if not exercise: return None
 
@@ -171,6 +184,9 @@ async def check_exercise_gramar(answer: ExerciseGramarAnswer):
         if exercise["answers"][i] != answer.answers[i]:
             result = False
             break
+    
+    if result:
+        database.complete_exercise(user_id, answer.id, EXERCISES_TYPES.WORDS)
     
     return {"result": result}
 
@@ -221,3 +237,28 @@ async def get_telegram_user_profile_photo(user_id: int):
 async def get_achievements_types():
     result = database.get_achievements_types()
     return {"result": result}
+
+@app.post("/achievements/visits")
+async def update_visit_status(user_id: int):
+    user_stats = database.get_user_total_stats(user_id)
+    if user_stats:
+        today = datetime.today().strftime("%Y-%m-%d")
+        yesterday = (datetime.today() - timedelta(1)).strftime("%Y-%m-%d")
+
+        streak = user_stats["entrance_streak"]
+
+        if user_stats["last_entrance_date"] == yesterday:
+            streak += 1
+        elif user_stats["last_entrance_date"] != today:
+            streak = 1
+
+        user_stats["last_entrance_date"] = today
+        user_stats["entrance_streak"] = streak
+
+        database.update_user_total_stats(user_stats)
+
+@app.post("/users")
+async def create_or_update_user(user_data: UserData):
+    user = User(id=user_data.user_id, wallet=user_data.wallet)
+    database.write_or_update_user(user)
+
