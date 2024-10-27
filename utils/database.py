@@ -142,7 +142,8 @@ class Database:
         self._connection.commit()
     
     def write_or_update_user(self, user: User):
-        self._cursor.execute(f'SELECT (tg_user_id, wallet) from users WHERE tg_user_id={user["id"]};')
+        self._cursor.execute(f'SELECT (tg_user_id) from users WHERE tg_user_id={user["id"]};')
+        self._cursor.fetchall()
         if self._cursor.rowcount == 1:
             self._cursor.execute(f'UPDATE users SET wallet="{user["wallet"]}" WHERE tg_user_id={user["id"]};')
         else:
