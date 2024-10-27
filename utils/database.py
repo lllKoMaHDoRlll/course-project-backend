@@ -11,6 +11,9 @@ from models.users import TotalStats, User
 
 import os, random
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DB_USER = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")

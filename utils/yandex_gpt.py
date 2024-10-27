@@ -1,5 +1,8 @@
 import os, requests, wave
 from typing import TypedDict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 YAGPT_FOLDER_ID = os.environ.get("YAGPT_FOLDER_ID")
 YAGPT_IAM_TOKEN = os.environ.get("YAGPT_IAM_TOKEN")
