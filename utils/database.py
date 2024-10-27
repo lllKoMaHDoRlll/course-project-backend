@@ -42,14 +42,6 @@ class Database:
             return {"id": result[0], "words": result[1].split()}
         return None
     
-    def get_completed_listening_exercises_ids_by_user_id(self, user_id: int) -> list[int]:
-        if not isinstance(user_id, int): return []
-        self._cursor.execute(f"SELECT exercise_id from completed_listening_exercises WHERE tg_user_id = {user_id};")
-        result = []
-        for (exercise_id) in self._cursor:
-            result.append(exercise_id)
-        return result
-    
     def write_listening_exercise(self, exercise: ExerciseListeningDBData) -> int:
         words = " ".join(exercise["words"])
         self._cursor.execute(f'INSERT INTO listening_exercises (words) VALUES ("{words}");')
@@ -64,14 +56,6 @@ class Database:
         if result:
             return {"id": result[0], "words": result[1].split(), "translations": result[2].split()}
         return None
-    
-    def get_completed_words_exercises_ids_by_user_id(self, user_id: int) -> list[int]:
-        if not isinstance(user_id, int): return []
-        self._cursor.execute(f"SELECT exercise_id from completed_words_exercises WHERE tg_user_id = {user_id};")
-        result = []
-        for (exercise_id) in self._cursor:
-            result.append(exercise_id)
-        return result
     
     def write_words_exercise(self, exercise: ExerciseWordsDBData) -> int:
         words = " ".join(exercise["words"])
@@ -88,14 +72,6 @@ class Database:
         if result:
             return {"id": result[0], "sentence": result[1], "translation": result[2]}
         return None
-
-    def get_completed_sentence_exercises_ids_by_user_id(self, user_id: int) -> list[int]:
-        if not isinstance(user_id, int): return []
-        self._cursor.execute(f"SELECT exercise_id from completed_sentence_exercises WHERE tg_user_id = {user_id};")
-        result = []
-        for (exercise_id) in self._cursor:
-            result.append(exercise_id)
-        return result
     
     def write_sentence_exercise(self, exercise: ExerciseSentenceDBData) -> int:
         sentence = exercise["sentence"]
@@ -123,9 +99,9 @@ class Database:
             return {"id": result[0], "description": result[1], "tasks": list(map(lambda task: task.split("%") , result[2].split("@"))), "answers": result[3].split("@")}
         return None
     
-    def get_completed_gramar_exercises_ids_by_user_id(self, user_id: int) -> list[int]:
+    def get_completed_exercises_ids_by_user_id(self, exercise_type_id: int, user_id: int) -> list[int]:
         if not isinstance(user_id, int): return []
-        self._cursor.execute(f"SELECT exercise_id from completed_gramar_exercises WHERE tg_user_id = {user_id};")
+        self._cursor.execute(f"SELECT exercise_id from completed_exercises WHERE tg_user_id = {user_id} AND exercise_type_id = {exercise_type_id};")
         result = []
         for (exercise_id) in self._cursor:
             result.append(exercise_id)
