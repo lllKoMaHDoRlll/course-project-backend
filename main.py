@@ -173,7 +173,7 @@ async def get_exercise_gramar_data():
 
     return exercise_data
 
-@app.post("exercises/gramar")
+@app.post("/exercises/gramar")
 async def check_exercise_gramar(answer: ExerciseGramarAnswer, user_id: int):
     exercise = database.get_gramar_exercise_by_id(answer.id)
     if not exercise: return None
