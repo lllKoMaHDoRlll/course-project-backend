@@ -157,7 +157,7 @@ async def check_exercise_listening(exercise_listening_data: ExerciseListeningAns
             break
     
     if result:
-        database.complete_exercise(user_id, exercise_listening_data.id, EXERCISES_TYPES.WORDS)
+        database.complete_exercise(user_id, exercise_listening_data.id, EXERCISES_TYPES.LISTENING)
     
     return {"result": result}
 
@@ -185,7 +185,7 @@ async def check_exercise_gramar(answer: ExerciseGramarAnswer, user_id: int):
             break
     
     if result:
-        database.complete_exercise(user_id, answer.id, EXERCISES_TYPES.WORDS)
+        database.complete_exercise(user_id, answer.id, EXERCISES_TYPES.GRAMAR)
     
     return {"result": result}
 

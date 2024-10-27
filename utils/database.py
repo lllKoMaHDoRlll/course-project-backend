@@ -117,7 +117,7 @@ class Database:
         return last_insert_id
     
     def complete_exercise(self, user_id: int, exercise_id: int, exercise_type_id: EXERCISES_TYPES):
-        self._cursor.execute(f'INSERT INTO completed_exercises (tg_user_id, exercise_id, exercise_type_id) VALUES ({user_id}, {exercise_id}, {exercise_type_id});')
+        self._cursor.execute(f'INSERT INTO completed_exercises (tg_user_id, exercise_id, exercise_type_id) VALUES ({user_id}, {exercise_id}, {exercise_type_id.value});')
         self._connection.commit()
     
     def get_user_total_stats(self, user_id: int) -> TotalStats | None:
