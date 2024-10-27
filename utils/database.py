@@ -138,7 +138,7 @@ class Database:
             
     
     def update_user_total_stats(self, total_stats: TotalStats):
-        self._cursor.execute(f'UPDATE total_stas SET last_entrance_date={total_stats["last_entrance_date"]}, entrance_strak={total_stats["entrance_streak"]} WHERE tg_user_id={total_stats["user_id"]}')
+        self._cursor.execute(f'UPDATE total_stats SET last_entrance_date={total_stats["last_entrance_date"]}, entrance_streak={total_stats["entrance_streak"]} WHERE tg_user_id={total_stats["user_id"]}')
         self._connection.commit()
     
     def write_or_update_user(self, user: User):
