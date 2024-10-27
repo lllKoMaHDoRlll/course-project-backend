@@ -37,7 +37,7 @@ class Database:
             achievements_types.append({"id": id_, "name": name})
         for achievement_type in achievements_types:
             print(str(achievement_type["id"]))
-            self._cursor.execute("SELECT id, name, description FROM achievements WHERE type_id = %s;", (achievement_type["id"],))
+            self._cursor.execute("SELECT id, name, description FROM achievements WHERE type_id = %s ORDER BY id ASC;", (achievement_type["id"],))
             achievements = self._cursor.fetchall()
             achievement_type_progress: AchievementTypeProgress = {"id": achievement_type["id"], "name": achievement_type["name"], "total": self._cursor.rowcount, "completed": 0}
             
