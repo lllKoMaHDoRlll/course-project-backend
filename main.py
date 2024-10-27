@@ -36,9 +36,8 @@ app = FastAPI(root_path="/api/") # set root_path if on server with reverse proxy
 origins = [
     "http://localhost",
     "http://localhost:4200",
-    "https://four-aliens-mate.loca.lt",
-    "https://four-aliens-mate.loca.lt:4200",
-    "https://tonolingo.ru"
+    "https://tonolingo.ru",
+    "*" # testing purpose only. remove when prod
 ]
 
 app.add_middleware(
