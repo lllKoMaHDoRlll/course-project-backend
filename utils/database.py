@@ -38,7 +38,7 @@ class Database:
 
     def get_listening_exercise_by_id(self, id: int) -> ExerciseListeningDBData | None:
         if not isinstance(id, int): return None
-        self._cursor.execute("SELECT * from listening_exercises WHERE id = %s;", (id))
+        self._cursor.execute("SELECT * from listening_exercises WHERE id = %s;", (id,))
         result = self._cursor.fetchone()
         print(result)
         if result: 
@@ -47,14 +47,14 @@ class Database:
     
     def write_listening_exercise(self, exercise: ExerciseListeningDBData) -> int:
         words = " ".join(exercise["words"])
-        self._cursor.execute("INSERT INTO listening_exercises (words) VALUES (%s);", (words))
+        self._cursor.execute("INSERT INTO listening_exercises (words) VALUES (%s);", (words,))
         self._connection.commit()
         last_insert_id = self._cursor.lastrowid
         return last_insert_id
 
     def get_words_exercise_by_id(self, id: int) -> ExerciseWordsDBData | None:
         if not isinstance(id, int): return None
-        self._cursor.execute("SELECT * from words_exercises WHERE id = %s;", (id))
+        self._cursor.execute("SELECT * from words_exercises WHERE id = %s;", (id,))
         result = self._cursor.fetchone()
         if result:
             return {"id": result[0], "words": result[1].split(), "translations": result[2].split()}
@@ -70,7 +70,7 @@ class Database:
 
     def get_sentence_exercise_by_id(self, id: int) -> ExerciseSentenceDBData | None:
         if not isinstance(id, int): return None
-        self._cursor.execute("SELECT * from sentence_exercises WHERE id = %s;", (id))
+        self._cursor.execute("SELECT * from sentence_exercises WHERE id = %s;", (id,))
         result = self._cursor.fetchone()
         if result:
             return {"id": result[0], "sentence": result[1], "translation": result[2]}
@@ -88,7 +88,7 @@ class Database:
         self._cursor.execute("SELECT id from gramar_exercises;")
         ids = list(map(lambda t: t[0], self._cursor.fetchall()))
         random_id = random.choice(ids)
-        self._cursor.execute("SELECT * from gramar_exercises WHERE id = %s;", (random_id))
+        self._cursor.execute("SELECT * from gramar_exercises WHERE id = %s;", (random_id,))
         result = self._cursor.fetchone()
         if result:
            return {"id": result[0], "description": result[1], "tasks": list(map(lambda task: task.split("%") , result[2].split("@"))), "answers": result[3].split("@")}
@@ -96,7 +96,7 @@ class Database:
     
     def get_gramar_exercise_by_id(self, id: int) -> ExerciseGramarDBData | None:
         if not isinstance(id, int): return None
-        self._cursor.execute("SELECT * from gramar_exercises WHERE id = %s;", (id))
+        self._cursor.execute("SELECT * from gramar_exercises WHERE id = %s;", (id,))
         result = self._cursor.fetchone()
         if result:
             return {"id": result[0], "description": result[1], "tasks": list(map(lambda task: task.split("%") , result[2].split("@"))), "answers": result[3].split("@")}
@@ -125,7 +125,7 @@ class Database:
     
     def get_user_total_stats(self, user_id: int) -> TotalStats | None:
         if not isinstance(user_id, int): return None
-        self._cursor.execute("SELECT * from total_stats WHERE tg_user_id = %s;", (user_id))
+        self._cursor.execute("SELECT * from total_stats WHERE tg_user_id = %s;", (user_id,))
         result = self._cursor.fetchone()
         print(result)
         if result: 
@@ -142,19 +142,16 @@ class Database:
         self._connection.commit()
     
     def write_or_update_user(self, user: User):
-        self._cursor.execute("SELECT (tg_user_id) from users WHERE tg_user_id=%s;", (user["id"]))
+        self._cursor.execute("SELECT (tg_user_id) from users WHERE tg_user_id=%s;", (user["id"],))
         self._cursor.fetchall()
         if self._cursor.rowcount == 1:
             self._cursor.execute("UPDATE users SET wallet=%s WHERE tg_user_id=%s;", (user["wallet"], user["id"]))
         else:
-            self._cursor.execute("INSERT INTO users (tg_user_id) VALUES (%s);", (user["id"]))
+            self._cursor.execute("INSERT INTO users (tg_user_id) VALUES (%s);", (user["id"],))
 
             today = datetime.today().strftime("%Y-%m-%d")
 
-            self._cursor.execute("INSERT INTO total_stats (tg_user_id, last_entrance_date, entrance_streak, completed_tasks) VALUES (%s, %s, %s);", (user["id"], today, 1))
+            self._cursor.execute("INSERT INTO total_stats (tg_user_id, last_entrance_date, entrance_streak) VALUES (%s, %s, %s);", (user["id"], today, 1))
         self._connection.commit()
-
-
-    
 
 database = Database()
