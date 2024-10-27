@@ -246,9 +246,9 @@ async def update_visit_status(user_id: int):
 
         streak = user_stats["entrance_streak"]
 
-        if user_stats["last_entrance_date"] == yesterday:
+        if str(user_stats["last_entrance_date"]) == str(yesterday):
             streak += 1
-        elif user_stats["last_entrance_date"] != today:
+        elif str(user_stats["last_entrance_date"]) != str(today):
             streak = 1
 
         user_stats["last_entrance_date"] = today
