@@ -31,7 +31,7 @@ load_dotenv()
 
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
 
-app = FastAPI()
+app = FastAPI(root_path="/api/") # set root_path if on server with reverse proxy on /api/ path
 
 origins = [
     "http://localhost",
