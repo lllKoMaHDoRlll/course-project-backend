@@ -41,7 +41,7 @@ class Database:
                              """, (achievement_type, user_id))
         result: list[Achievement] = []
         for (id_, name, description, tg_user_id, SBT_received) in self._cursor:
-            result.append({"id": id_, "name": name, "description": description, "type_id": achievement_type, "is_completed": tg_user_id != None, "is_sbt_claimed": SBT_received})
+            result.append({"id": id_, "name": name, "description": description, "type_id": achievement_type, "is_completed": tg_user_id != None, "is_sbt_claimed": SBT_received if SBT_received != None else False})
         return result
     
     def get_achievements_types_progresses(self, user_id: int) -> list[AchievementTypeProgress]:
