@@ -6,6 +6,12 @@ class AchievementType(TypedDict):
     id: int
     name: str
 
+class AchievementTypeProgress(TypedDict):
+    id: int
+    name: str
+    completed: int
+    total: int
+
 class ACHIEVEMENTS(Enum):
     START_OF_JOURNEY = 1
     INTRESTED = 2

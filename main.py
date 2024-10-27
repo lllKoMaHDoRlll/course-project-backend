@@ -233,8 +233,8 @@ async def get_telegram_user_profile_photo(user_id: int):
     return FileResponse("profile_photo.jpg", media_type="image/jpg")
 
 @app.get("/achievements/types")
-async def get_achievements_types():
-    result = database.get_achievements_types()
+async def get_achievements_types_progresses():
+    result = database.get_achievements_types_progresses()
     return {"result": result}
 
 @app.post("/achievements/visits")

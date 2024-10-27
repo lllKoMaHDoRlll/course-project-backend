@@ -1,5 +1,5 @@
 from mysql.connector import connect
-from models.achievements import AchievementType
+from models.achievements import AchievementType, AchievementTypeProgress
 from models.exercises import (
     ExerciseListeningDBData, 
     ExerciseWordsDBData, 
@@ -29,11 +29,23 @@ class Database:
         )
         self._cursor = self._connection.cursor()
     
-    def get_achievements_types(self) -> list[AchievementType]:
+    def get_achievements_types_progresses(self, user_id: int) -> list[AchievementTypeProgress]:
         self._cursor.execute("SELECT * from achievements_types;")
-        result: list[AchievementType] = []
+        result: list[AchievementTypeProgress] = []
+        achievements_types: list[AchievementType] = []
         for (id_, name) in self._cursor:
-            result.append({"id": id_, "name": name})
+            achievements_types.append({"id": id_, "name": name})
+        for achievement_type in achievements_types:
+            self._cursor.execute("SELECT (id, name, description) FROM achievements WHERE type_id = %s;", (achievement_type["id"],))
+            achievements = self._cursor.fetchall()
+            achievement_type_progress: AchievementTypeProgress = {"id": achievement_type["id"], "name": achievement_type["name"], "total": self._cursor.rowcount, "completed": 0}
+            
+            for achievement in achievements:
+                self._cursor.execute("SELECT (id) FROM completed_achievements WHERE tg_user_id = %s achievement_id = %s", (user_id, achievement[0]))
+                self._cursor.fetchone()
+                if self._cursor.rowcount == 1:
+                    achievement_type_progress["completed"] += 1
+            result.append(achievement_type_progress)
         return result
 
     def get_listening_exercise_by_id(self, id: int) -> ExerciseListeningDBData | None:
