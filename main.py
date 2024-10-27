@@ -237,6 +237,11 @@ async def get_achievements_types_progresses(user_id: int):
     result = database.get_achievements_types_progresses(user_id)
     return {"result": result}
 
+@app.get("/achievements")
+async def get_achievements(user_id: int, type_id: int):
+    result = database.get_achievements_by_type_and_user_id(user_id, type_id)
+    return {"result": result}
+
 @app.post("/achievements/visits")
 async def update_visit_status(user_id: int):
     user_stats = database.get_user_total_stats(user_id)

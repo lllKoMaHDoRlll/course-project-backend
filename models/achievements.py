@@ -2,6 +2,14 @@ from typing import TypedDict
 from enum import Enum
 
 
+class Achievement(TypedDict):
+    id: int
+    name: str
+    description: str
+    type_id: int
+    is_completed: bool
+    is_sbt_claimed: bool
+
 class AchievementType(TypedDict):
     id: int
     name: str

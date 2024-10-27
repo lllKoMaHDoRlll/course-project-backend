@@ -1,5 +1,5 @@
 from mysql.connector import connect
-from models.achievements import AchievementType, AchievementTypeProgress
+from models.achievements import AchievementType, AchievementTypeProgress, Achievement
 from models.exercises import (
     ExerciseListeningDBData, 
     ExerciseWordsDBData, 
@@ -28,6 +28,21 @@ class Database:
             database="tonolingo"
         )
         self._cursor = self._connection.cursor()
+
+    def get_achievements_by_type_and_user_id(self, user_id: int, achievement_type: int) -> list[Achievement]:
+        self._cursor.execute("""SELECT 
+                             achievements.id, achievements.name, achievements.description, 
+                             completed_achievements.tg_user_id, completed_achievements.SBT_received 
+                             FROM achievements 
+                             LEFT JOIN completed_achievements 
+                             ON achievements.id = completed_achievements.achievement_id 
+                             WHERE achievements.type_id = %s AND 
+                             (completed_achievements.tg_user_id = %s OR completed_achievements.tg_user_id IS NULL);
+                             """, (achievement_type, user_id))
+        result: list[Achievement] = []
+        for (id_, name, description, tg_user_id, SBT_received) in self._cursor:
+            result.append({"id": id_, "name": name, "description": description, "type_id": achievement_type, "is_completed": tg_user_id != None, "is_sbt_claimed": SBT_received})
+        return result
     
     def get_achievements_types_progresses(self, user_id: int) -> list[AchievementTypeProgress]:
         self._cursor.execute("SELECT * from achievements_types;")
