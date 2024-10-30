@@ -20,16 +20,25 @@ async def make_gpt_request(premessage: str, message: str) -> str:
         {"role": "user", "text": message},
     ]
 
-    response = requests.post(
-        YAGPT_URL,
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {YAGPT_IAM_TOKEN}"
-        },
-        json=data
-    ).json()
+    retries_count = 0
+    while retries_count < 3:
+        try:
+            response = requests.post(
+                YAGPT_URL,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {YAGPT_IAM_TOKEN}"
+                },
+                json=data
+            ).json()
 
-    return response["result"]["alternatives"][0]["message"]["text"]
+            return response["result"]["alternatives"][0]["message"]["text"]
+        except Exception:
+            retries_count += 1
+            print("retrying...", retries_count)
+            pass
+    return ""
+    
 
 async def synthesize(text: str):
     data = {
