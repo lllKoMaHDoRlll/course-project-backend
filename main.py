@@ -31,7 +31,24 @@ load_dotenv()
 
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
 
-app = FastAPI(root_path="/api/") # set root_path if on server with reverse proxy on /api/ path
+def close_connections():
+    database._connection.close()
+    # database._tunnel.close() # test purpose
+
+def retry_on_exception(func):
+    async def inner():
+        retries_count = 0
+        while retries_count < 5:
+            try:
+                return await func()
+            except Exception as e:
+                print(e)
+                retries_count += 1
+                print("retrying... retry number:", retries_count)
+                pass
+    return inner
+
+app = FastAPI(root_path="/api/", on_shutdown=[close_connections]) # set root_path if on server with reverse proxy on /api/ path
 
 origins = [
     "http://localhost",
@@ -50,6 +67,7 @@ app.add_middleware(
 )
 
 @app.get("/exercises/sentence")
+@retry_on_exception
 async def get_exercise_sentences_data():
     response = await make_gpt_request(
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
@@ -86,6 +104,7 @@ async def check_exercise_sentences_data(exercise_sentences_answer: ExerciseSente
     return {"result": result}
 
 @app.get("/exercises/words")
+@retry_on_exception
 async def get_exercise_words_data():
     response = await make_gpt_request(
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
@@ -130,6 +149,7 @@ async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer, us
     return {"result": result}
 
 @app.get("/exercises/listening")
+@retry_on_exception
 async def get_exercise_listening_data():
     response = await make_gpt_request(
         "Ты общаешься с программой, никак не дополняй свой ответ, предоставляй только ответ.",
@@ -191,6 +211,7 @@ async def check_exercise_gramar(answer: ExerciseGramarAnswer, user_id: int):
 
 
 @app.get("/exercises/chain")
+@retry_on_exception
 async def get_exercise_chain_data(word: str | None = None):
     if word is None:
         response = await make_gpt_request(
