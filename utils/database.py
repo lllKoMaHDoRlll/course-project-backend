@@ -160,13 +160,14 @@ class Database:
             return TotalStats(
                 user_id=result[0],
                 last_entrance_date=result[1],
-                entrance_streak=result[2]
+                entrance_streak=result[2],
+                total_entrances=result[3]
             )
         return None
             
     
     def update_user_total_stats(self, total_stats: TotalStats):
-        self._cursor.execute("UPDATE total_stats SET last_entrance_date=%s, entrance_streak=%s WHERE tg_user_id=%s", (total_stats["last_entrance_date"], total_stats["entrance_streak"], total_stats["user_id"]))
+        self._cursor.execute("UPDATE total_stats SET last_entrance_date=%s, entrance_streak=%s, total_entrances=%s WHERE tg_user_id=%s", (total_stats["last_entrance_date"], total_stats["entrance_streak"], total_stats["total_entrances"], total_stats["user_id"]))
         self._connection.commit()
     
     def write_or_update_user(self, user: User):
@@ -179,7 +180,7 @@ class Database:
 
             today = datetime.today().strftime("%Y-%m-%d")
 
-            self._cursor.execute("INSERT INTO total_stats (tg_user_id, last_entrance_date, entrance_streak) VALUES (%s, %s, %s);", (user["id"], today, 1))
+            self._cursor.execute("INSERT INTO total_stats (tg_user_id, last_entrance_date, entrance_streak, total_entrances) VALUES (%s, %s, %s, %s);", (user["id"], today, 1, 1))
         self._connection.commit()
 
 database = Database()

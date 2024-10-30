@@ -267,18 +267,24 @@ async def get_achievements(user_id: int, type_id: int):
 async def update_visit_status(user_id: int):
     user_stats = database.get_user_total_stats(user_id)
     if user_stats:
+        print(user_stats)
         today = datetime.today().strftime("%Y-%m-%d")
         yesterday = (datetime.today() - timedelta(1)).strftime("%Y-%m-%d")
 
         streak = user_stats["entrance_streak"]
+        total_entrances = user_stats["total_entrances"]
 
         if str(user_stats["last_entrance_date"]) == str(yesterday):
             streak += 1
+            total_entrances += 1
         elif str(user_stats["last_entrance_date"]) != str(today):
+            print("reset streak")
             streak = 1
+            total_entrances += 1
 
         user_stats["last_entrance_date"] = today
         user_stats["entrance_streak"] = streak
+        user_stats["total_entrances"] = total_entrances
 
         database.update_user_total_stats(user_stats)
 
