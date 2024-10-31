@@ -29,20 +29,31 @@ class Database:
         )
         self._cursor = self._connection.cursor()
 
-    def get_achievements_by_type_and_user_id(self, user_id: int, achievement_type: int) -> list[Achievement]:
-        self._cursor.execute("""SELECT 
-                             achievements.id, achievements.name, achievements.description, 
-                             completed_achievements.tg_user_id, completed_achievements.SBT_received 
-                             FROM achievements 
-                             LEFT JOIN completed_achievements 
-                             ON achievements.id = completed_achievements.achievement_id 
-                             WHERE achievements.type_id = %s AND 
-                             (completed_achievements.tg_user_id = %s OR completed_achievements.tg_user_id IS NULL);
-                             """, (achievement_type, user_id))
+    def get_achievements_by_user_id(self, user_id: int, achievement_type: int = -1) -> list[Achievement]:
+        self._cursor.execute("""
+                            SELECT 
+                                a.id AS achievement_id, a.type_id, a.name, a.description, ca.SBT_received,
+                                CASE 
+                                    WHEN ca.tg_user_id IS NOT NULL THEN ca.tg_user_id
+                                    ELSE NULL 
+                                END
+                            FROM 
+                                achievements a
+                            LEFT JOIN 
+                                completed_achievements ca 
+                            ON 
+                                a.id = ca.achievement_id AND ca.tg_user_id = %s;
+        """, (user_id,))
         result: list[Achievement] = []
-        for (id_, name, description, tg_user_id, SBT_received) in self._cursor:
-            result.append({"id": id_, "name": name, "description": description, "type_id": achievement_type, "is_completed": tg_user_id != None, "is_sbt_claimed": SBT_received if SBT_received != None else False})
+        for (id_, type_id, name, description, SBT_received, tg_user_id) in self._cursor:
+            if achievement_type == -1 or achievement_type == type_id:
+                result.append({"id": id_, "name": name, "description": description, "type_id": achievement_type, "is_completed": tg_user_id != None, "is_sbt_claimed": SBT_received if SBT_received != None else False})
+        print(result)
         return result
+    
+    def write_achievement_completion(self, user_id: int, achievement_id: int):
+        self._cursor.execute("INSERT INTO completed_achievements (achievement_id, tg_user_id) VALUES (%s, %s);", (achievement_id, user_id))
+        self._connection.commit()
     
     def get_achievements_types_progresses(self, user_id: int) -> list[AchievementTypeProgress]:
         self._cursor.execute("SELECT * from achievements_types;")

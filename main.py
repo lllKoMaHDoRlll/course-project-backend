@@ -26,6 +26,7 @@ from models.exercises import (
 )
 
 from models.users import UserData, User
+from utils.achievements import check_achievements_completion
 
 load_dotenv()
 
@@ -33,7 +34,7 @@ TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
 
 def close_connections():
     database._connection.close()
-    # database._tunnel.close() # test purpose
+    database._tunnel.close() # test purpose
 
 def retry_on_exception(func):
     async def inner():
@@ -48,7 +49,7 @@ def retry_on_exception(func):
                 pass
     return inner
 
-app = FastAPI(root_path="/api/", on_shutdown=[close_connections]) # set root_path if on server with reverse proxy on /api/ path
+app = FastAPI(root_path="/api", on_shutdown=[close_connections]) # set root_path if on server with reverse proxy on /api/ path
 
 origins = [
     "http://localhost",
@@ -260,7 +261,7 @@ async def get_achievements_types_progresses(user_id: int):
 
 @app.get("/achievements")
 async def get_achievements(user_id: int, type_id: int):
-    result = database.get_achievements_by_type_and_user_id(user_id, type_id)
+    result = database.get_achievements_by_user_id(user_id, type_id)
     return {"result": result}
 
 @app.post("/achievements/visits")
@@ -285,9 +286,13 @@ async def update_visit_status(user_id: int):
         user_stats["last_entrance_date"] = today
         user_stats["entrance_streak"] = streak
         user_stats["total_entrances"] = total_entrances
-
         database.update_user_total_stats(user_stats)
 
+        completed_achievements = check_achievements_completion(database, user_id, 1, total_entrances=total_entrances, streak=streak)
+
+        result = {"completed_achievements": completed_achievements}
+        return result
+            
 @app.post("/users")
 async def create_or_update_user(user_data: UserData):
     user = User(id=user_data.user_id, wallet=user_data.wallet)
