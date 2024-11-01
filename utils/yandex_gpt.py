@@ -50,24 +50,31 @@ async def synthesize(text: str):
         "sampleRateHertz": 48000,
     }
 
-    with requests.post(
-        YASPEECHKIT_URL,
-        headers={
-            "Authorization": f"Bearer {YAGPT_IAM_TOKEN}"
-        },
-        data=data
-    ) as resp:
-        if resp.status_code != 200:
-            raise RuntimeError("Invalid response received: code: %d, message: %s" % (resp.status_code, resp.text))
+    retries_count = 0
+    while retries_count < 3:
+        try:
+            with requests.post(
+                YASPEECHKIT_URL,
+                headers={
+                    "Authorization": f"Bearer {YAGPT_IAM_TOKEN}"
+                },
+                data=data
+            ) as resp:
+                if resp.status_code != 200:
+                    raise RuntimeError("Invalid response received: code: %d, message: %s" % (resp.status_code, resp.text))
 
-        with open("output.raw", "wb") as file:
-            for chunk in resp.iter_content(chunk_size=None):
-                file.write(chunk)
-        
-    with open("output.raw", "rb") as file:
-        file_data = file.read()
-        with wave.open("output.wav", "wb") as output_file:
-            output_file.setnchannels(1)
-            output_file.setsampwidth(2)
-            output_file.setframerate(48000)
-            output_file.writeframesraw(file_data)
+                with open("output.raw", "wb") as file:
+                    for chunk in resp.iter_content(chunk_size=None):
+                        file.write(chunk)
+                
+            with open("output.raw", "rb") as file:
+                file_data = file.read()
+                with wave.open("output.wav", "wb") as output_file:
+                    output_file.setnchannels(1)
+                    output_file.setsampwidth(2)
+                    output_file.setframerate(48000)
+                    output_file.writeframesraw(file_data)
+        except Exception:
+                retries_count += 1
+                print("retrying...", retries_count)
+                pass
