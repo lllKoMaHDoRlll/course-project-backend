@@ -1,4 +1,4 @@
-from mysql.connector import connect
+from mysql.connector import connect, MySQLConnection
 from models.achievements import AchievementType, AchievementTypeProgress, Achievement
 from models.exercises import (
     ExerciseListeningDBData, 
@@ -17,12 +17,31 @@ load_dotenv()
 
 DB_USER = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
+RUN_MODE = os.environ.get("RUN_MODE")
+
+if RUN_MODE == "dev":
+    import sshtunnel # type: ignore
+    SSH_HOST=os.environ.get("SSH_HOST")
+    SSH_USER=os.environ.get("SSH_USER")
+    SSH_PASSWORD=os.environ.get("SSH_PASSWORD")
 
 class Database:
     def __init__(self):
-        self._connection = connect(
-            host="localhost",
-            port=3306,
+        port = 3306
+        if RUN_MODE == "dev":
+            self._tunnel = sshtunnel.SSHTunnelForwarder(
+                (SSH_HOST, 22),
+                ssh_username=SSH_USER,
+                ssh_password=SSH_PASSWORD,
+                remote_bind_address=("127.0.0.1", 3306)
+            )
+            self._tunnel.start()
+            print(self._tunnel.tunnel_is_up)
+            print(self._tunnel.local_bind_port)
+            port = self._tunnel.local_bind_port
+        self._connection = MySQLConnection(
+            host="127.0.0.1",
+            port=port,
             user=DB_USER,
             password=DB_PASSWORD,
             database="tonolingo"
