@@ -100,9 +100,15 @@ async def check_exercise_sentences_data(exercise_sentences_answer: ExerciseSente
     exercise_data = database.get_sentence_exercise_by_id(exercise_sentences_answer.id)
     if not exercise_data: return {"result": False}
     result = exercise_data["sentence"] == exercise_sentences_answer.answer
+    completed_achievements = []
     if result:
         database.complete_exercise(user_id, exercise_sentences_answer.id, EXERCISES_TYPES.SENTENCE)
-    return {"result": result}
+        completions_count_total = database.get_exercises_completion_count(user_id=user_id)
+        completions_count = database.get_exercises_completion_count(user_id=user_id, exercise_type=EXERCISES_TYPES.SENTENCE)
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=1, exercise_completion_count_total=completions_count_total))
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=2, exercise_sentences_completion_count=completions_count))
+
+    return {"result": result, "completed_achievements": completed_achievements}
 
 @app.get("/exercises/words")
 @retry_on_exception
@@ -144,10 +150,15 @@ async def check_exercise_words_data(exercise_words_data: ExerciseWordsAnswer, us
             result = False
             break
     
+    completed_achievements = []
     if result:
         database.complete_exercise(user_id, exercise_words_data.id, EXERCISES_TYPES.WORDS)
+        completions_count_total = database.get_exercises_completion_count(user_id=user_id)
+        completions_count = database.get_exercises_completion_count(user_id=user_id, exercise_type=EXERCISES_TYPES.WORDS)
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=1, exercise_completion_count_total=completions_count_total))
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=3, exercise_sentences_completion_count=completions_count))
     
-    return {"result": result}
+    return {"result": result, "completed_achievements": completed_achievements}
 
 @app.get("/exercises/listening")
 @retry_on_exception
@@ -177,10 +188,15 @@ async def check_exercise_listening(exercise_listening_data: ExerciseListeningAns
             result = False
             break
     
+    completed_achievements = []
     if result:
         database.complete_exercise(user_id, exercise_listening_data.id, EXERCISES_TYPES.LISTENING)
+        completions_count_total = database.get_exercises_completion_count(user_id=user_id)
+        completions_count = database.get_exercises_completion_count(user_id=user_id, exercise_type=EXERCISES_TYPES.LISTENING)
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=1, exercise_completion_count_total=completions_count_total))
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=4, exercise_sentences_completion_count=completions_count))
     
-    return {"result": result}
+    return {"result": result, "completed_achievements": completed_achievements}
 
 @app.get("/exercises/gramar")
 async def get_exercise_gramar_data():
@@ -205,10 +221,15 @@ async def check_exercise_gramar(answer: ExerciseGramarAnswer, user_id: int):
             result = False
             break
     
+    completed_achievements = []
     if result:
         database.complete_exercise(user_id, answer.id, EXERCISES_TYPES.GRAMAR)
+        completions_count_total = database.get_exercises_completion_count(user_id=user_id)
+        completions_count = database.get_exercises_completion_count(user_id=user_id, exercise_type=EXERCISES_TYPES.GRAMAR)
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=1, exercise_completion_count_total=completions_count_total))
+        completed_achievements.extend(check_achievements_completion(database=database, user_id=user_id, type_id=5, exercise_sentences_completion_count=completions_count))
     
-    return {"result": result}
+    return {"result": result, "completed_achievements": completed_achievements}
 
 
 @app.get("/exercises/chain")
