@@ -287,6 +287,7 @@ async def get_achievements(user_id: int, type_id: int):
 
 @app.post("/achievements/visits")
 async def update_visit_status(user_id: int):
+    database.write_or_update_user(User(id=user_id, wallet=None))
     user_stats = database.get_user_total_stats(user_id)
     if user_stats:
         print(user_stats)
@@ -314,8 +315,8 @@ async def update_visit_status(user_id: int):
         result = {"completed_achievements": completed_achievements}
         return result
             
-@app.post("/users")
-async def create_or_update_user(user_data: UserData):
-    user = User(id=user_data.user_id, wallet=user_data.wallet)
-    database.write_or_update_user(user)
+# @app.post("/users")
+# async def create_or_update_user(user_data: UserData):
+#     user = User(id=user_data.user_id, wallet=user_data.wallet)
+#     database.write_or_update_user(user)
 
