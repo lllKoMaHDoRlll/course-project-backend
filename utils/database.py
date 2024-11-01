@@ -76,7 +76,7 @@ class Database:
         return result
     
     def get_exercises_completion_count(self, user_id: int, exercise_type: EXERCISES_TYPES | None = None) -> int:
-        if exercise_type == None:
+        if exercise_type is None:
             self._cursor.execute("SELECT COUNT(id) as completed_exercises_count FROM completed_exercises WHERE tg_user_id = %s;", (user_id,))
         else:
             self._cursor.execute("SELECT COUNT(id) as completed_exercises_count FROM completed_exercises WHERE tg_user_id = %s AND exercise_type_id = %s;", (user_id, exercise_type.value))
