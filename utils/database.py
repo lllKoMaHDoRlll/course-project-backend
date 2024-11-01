@@ -74,6 +74,15 @@ class Database:
                     achievement_type_progress["completed"] += 1
             result.append(achievement_type_progress)
         return result
+    
+    def get_exercises_completion_count(self, user_id: int, exercise_type: EXERCISES_TYPES | None = None) -> int:
+        if exercise_type == None:
+            self._cursor.execute("SELECT COUNT(id) as completed_exercises_count FROM completed_exercises WHERE tg_user_id = %s;", (user_id,))
+        else:
+            self._cursor.execute("SELECT COUNT(id) as completed_exercises_count FROM completed_exercises WHERE tg_user_id = %s AND exercise_type_id = %s;", (user_id, exercise_type.value))
+        result = self._cursor.fetchone()[0]
+        return result
+
 
     def get_listening_exercise_by_id(self, id: int) -> ExerciseListeningDBData | None:
         if not isinstance(id, int): return None
