@@ -66,8 +66,7 @@ class Database:
         result: list[Achievement] = []
         for (id_, type_id, name, description, SBT_received, tg_user_id) in self._cursor:
             if achievement_type == -1 or achievement_type == type_id:
-                result.append({"id": id_, "name": name, "description": description, "type_id": achievement_type, "is_completed": tg_user_id != None, "is_sbt_claimed": SBT_received if SBT_received != None else False})
-        print(result)
+                result.append({"id": id_, "name": name, "description": description, "type_id": type_id, "is_completed": tg_user_id is not None, "is_sbt_claimed": SBT_received if SBT_received is not None else False})
         return result
     
     def write_achievement_completion(self, user_id: int, achievement_id: int):
