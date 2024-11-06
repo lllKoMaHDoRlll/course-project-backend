@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from main import app, database
+from main import app, database, ton
 
 from utils.achievements import check_achievements_completion
 
@@ -44,3 +44,28 @@ async def update_visit_status(user_id: int):
 
         result = {"completed_achievements": completed_achievements}
         return result
+    
+@app.post("/achievements/sbt")
+async def claim_sbt(user_id: int, achievement_id: int):
+
+    user_achievements = database.get_achievements_by_user_id(user_id)
+    user = database.get_user(user_id)
+    if user is None:
+        return {"error": "user not found"}
+    
+    for achievement in user_achievements:
+        if achievement["id"] == achievement_id and achievement["is_completed"]:
+            required_achievement = achievement
+    
+    print(user)
+    
+    if required_achievement["is_completed"] and not required_achievement["is_sbt_claimed"]:
+        if user["wallet"] is not None:
+            tx_hash = await ton.mint_sbt(
+                user["wallet"], 
+                required_achievement["name"], 
+                required_achievement["description"],
+                ton.SBTS_IMAGE_PATH.format(required_achievement["id"]),
+                []
+            )
+            print(tx_hash)
