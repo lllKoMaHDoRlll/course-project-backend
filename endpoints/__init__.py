@@ -1,3 +1,3 @@
 from endpoints import (
-    exercises, achievements, telegram, 
+    exercises, achievements, telegram, users
 )
