@@ -13,6 +13,7 @@ IS_TESTNET = True
 
 class TON:
     def __init__(self):
+        self.SBTS_IMAGE_PATH = "https://tonolingo.ru/assets/images/sbt/{}.png"
         self.TONAPI_KEY = os.environ.get("TONAPI_KEY")
         self.TON_MNEMONIC = os.environ.get("TON_MNEMONIC")
         self.TON_OWNER_ADDRESS = os.environ.get("TON_OWNER_ADDR")
