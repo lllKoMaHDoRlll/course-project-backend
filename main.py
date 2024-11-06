@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 import os
 from utils.database import database
+from utils.ton import ton
 
 load_dotenv()
 
