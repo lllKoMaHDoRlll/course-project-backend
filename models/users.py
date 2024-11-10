@@ -9,9 +9,7 @@ class TotalStats(TypedDict):
 
 class User(TypedDict):
     id: int
-    wallet: str | None
 
 class UserData(BaseModel):
     user_id: int
-    wallet: str | None
 
