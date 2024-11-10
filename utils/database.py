@@ -203,23 +203,26 @@ class Database:
             )
         return None
     
-    def get_user(self, user_id: int) -> User | None:
-        self._cursor.execute("SELECT tg_user_id, wallet FROM users WHERE tg_user_id = %s;", (user_id,))
-        user_data = self._cursor.fetchone()
-        if user_data:
-            return User(id=user_data[0], wallet=user_data[1])
-        return None
+    def set_sbt_claimed(self, user_id: int, achievement_id: int):
+        self._cursor.execute("UPDATE completed_achievements SET SBT_received = 1 WHERE tg_user_id = %s AND achievement_id = %s;", (user_id, achievement_id))
+        self._connection.commit()
+    
+    # def get_user(self, user_id: int) -> User | None:
+    #     self._cursor.execute("SELECT tg_user_id, wallet FROM users WHERE tg_user_id = %s;", (user_id,))
+    #     user_data = self._cursor.fetchone()
+    #     if user_data:
+    #         return User(id=user_data[0], wallet=user_data[1])
+    #     return None
             
     
     def update_user_total_stats(self, total_stats: TotalStats):
         self._cursor.execute("UPDATE total_stats SET last_entrance_date=%s, entrance_streak=%s, total_entrances=%s WHERE tg_user_id=%s", (total_stats["last_entrance_date"], total_stats["entrance_streak"], total_stats["total_entrances"], total_stats["user_id"]))
         self._connection.commit()
     
-    def write_or_update_user(self, user: User): # TODO: if wallet is None then do not set the wallet column
+    def write_or_update_user(self, user: User):
         self._cursor.execute("SELECT (tg_user_id) from users WHERE tg_user_id=%s;", (user["id"],))
         self._cursor.fetchall()
-        if self._cursor.rowcount == 1:
-            self._cursor.execute("UPDATE users SET wallet=%s WHERE tg_user_id=%s;", (user["wallet"], user["id"]))
+        if self._cursor.rowcount == 1: return
         else:
             self._cursor.execute("INSERT INTO users (tg_user_id) VALUES (%s);", (user["id"],))
 
