@@ -3,6 +3,9 @@ from tonutils.client import TonapiClient # type: ignore
 from tonutils.nft import CollectionEditableModified # type: ignore
 from tonutils.nft.content import NFTModifiedOnchainContent # type: ignore
 from tonutils.wallet import WalletV5R1, WalletV4R2 # type: ignore
+from pytonapi import AsyncTonapi
+
+from main import database
 
 import os
 from dotenv import load_dotenv
@@ -24,6 +27,7 @@ class TON:
 
         self.client = TonapiClient(api_key=self.TONAPI_KEY, is_testnet=IS_TESTNET)
         self.wallet, _, _, _ = WalletV4R2.from_mnemonic(self.client, self.TON_MNEMONIC)
+        self.tonapi = AsyncTonapi(api_key=self.TONAPI_KEY, is_testnet=IS_TESTNET)
 
     async def get_next_nft_index(self) -> int:
         try:
@@ -33,10 +37,10 @@ class TON:
             print(ex)
             return -1
 
-    async def mint_sbt(self, owner_address: str, name: str, description: str, image_url: str, attributes: list[dict[str, str]]) -> str:
+    async def mint_sbt(self, owner_address: str, name: str, description: str, image_url: str, attributes: list[dict[str, str]]) -> tuple[str, bool]:
         nft_index = await self.get_next_nft_index()
         if nft_index == -1:
-            return ""
+            return ("", False)
 
         try:
             body = CollectionEditableModified.build_mint_body(
@@ -55,7 +59,14 @@ class TON:
                 amount=0.05,
                 body=body
             )
-            return tx_hash
+            trace = await self.tonapi.traces.get_trace(tx_hash)
+            status = trace.transaction.success
+            tx = trace.transaction
+            while status and hasattr(tx, "children") and tx.children.length > 0:
+                tx = tx.children[0]
+                status = tx.transaction.success
+
+            return (tx_hash, status)
         except Exception as ex:
             print(ex)
             return ""

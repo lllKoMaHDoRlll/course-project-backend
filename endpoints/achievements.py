@@ -17,7 +17,7 @@ async def get_achievements(user_id: int, type_id: int):
 
 @app.post("/achievements/visits")
 async def update_visit_status(user_id: int):
-    database.write_or_update_user(User(id=user_id, wallet=None))
+    database.write_or_update_user(User(id=user_id))
     user_stats = database.get_user_total_stats(user_id)
     if user_stats:
         print(user_stats)
@@ -46,26 +46,28 @@ async def update_visit_status(user_id: int):
         return result
     
 @app.post("/achievements/sbt")
-async def claim_sbt(user_id: int, achievement_id: int):
+async def claim_sbt(user_id: int, wallet: str, achievement_id: int):
 
     user_achievements = database.get_achievements_by_user_id(user_id)
-    user = database.get_user(user_id)
-    if user is None:
-        return {"error": "user not found"}
     
     for achievement in user_achievements:
         if achievement["id"] == achievement_id and achievement["is_completed"]:
             required_achievement = achievement
     
-    print(user)
-    
     if required_achievement["is_completed"] and not required_achievement["is_sbt_claimed"]:
-        if user["wallet"] is not None:
-            tx_hash = await ton.mint_sbt(
-                user["wallet"], 
+        if wallet is not None:
+            tx_hash, status = await ton.mint_sbt(
+                wallet, 
                 required_achievement["name"], 
                 required_achievement["description"],
                 ton.SBTS_IMAGE_PATH.format(required_achievement["id"]),
                 []
             )
-            print(tx_hash)
+            if status:
+                print("sbt claimed")
+                database.set_sbt_claimed(user_id=user_id, achievement_id=achievement_id)
+
+            return {"result": {
+                "tx_hash": tx_hash,
+                "status": status
+            }}
