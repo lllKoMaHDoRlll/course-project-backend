@@ -74,6 +74,7 @@ async def synthesize(text: str):
                     output_file.setsampwidth(2)
                     output_file.setframerate(48000)
                     output_file.writeframesraw(file_data)
+            return
         except Exception:
                 retries_count += 1
                 print("retrying...", retries_count)
