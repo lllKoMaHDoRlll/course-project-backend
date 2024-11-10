@@ -5,7 +5,6 @@ from utils.yandex_gpt import make_gpt_request
 from utils.common import retry_on_exception
 
 @app.get("/exercises/chain")
-@retry_on_exception()
 async def get_exercise_chain_data(word: str | None = None):
     if word is None:
         response = await make_gpt_request(
